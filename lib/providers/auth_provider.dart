@@ -67,32 +67,17 @@ class AuthProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    // Para depuración (mejor usar _logger en lugar de print)
     _logger.i("Iniciando proceso de logout...");
 
     try {
       // Llamar al servicio de logout
       final result = await _authService.logout();
-
-      // Verificar si el logout fue exitoso según la respuesta del servicio
       final success = result['success'] ?? true;
 
-      // Para depuración
       _logger.i("Resultado del servicio de logout: $result");
 
-      // Independiente del resultado, reseteamos los datos locales
-      _user = null;
-      _studentId = null;
-      _errorMessage = '';
-      _isLoading = false;
-
-      // Para depuración
-      _logger.i("Datos locales reseteados");
-
-      notifyListeners();
-
-      // Para depuración
-      _logger.i("Notificación enviada a oyentes");
+      // LIMPIEZA COMPLETA - Reset todos los datos del provider
+      _resetProviderState();
 
       return success;
     } catch (e) {
@@ -102,6 +87,24 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
       return false;
     }
+  }
+
+  // Método para resetear completamente el estado del provider
+  void _resetProviderState() {
+    _user = null;
+    _studentId = null;
+    _errorMessage = '';
+    _isLoading = false;
+
+    _logger.i("Datos del provider reseteados completamente");
+    notifyListeners();
+
+    // Esperar un momento para que la notificación surta efecto
+    Future.delayed(const Duration(milliseconds: 100), () {
+      _logger.i(
+        "Verificación post-reset: user=${_user == null ? 'null' : 'not null'}",
+      );
+    });
   }
 
   void clearError() {
@@ -116,4 +119,7 @@ class AuthProvider with ChangeNotifier {
 
   // Verificar si el usuario es estudiante
   bool get isStudent => hasRole('Student');
+
+  // Añadir este getter para obtener el token
+  Future<String?> get token async => await _authService.getAccessToken();
 }

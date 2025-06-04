@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../utils/logger_util.dart';
 
 class SidebarDrawer extends StatelessWidget {
   const SidebarDrawer({super.key});
@@ -38,12 +39,29 @@ class SidebarDrawer extends StatelessWidget {
               ),
             ),
 
+            // Añadir opción de Home al inicio
+            ListTile(
+              leading: const Icon(Icons.home),
+              title: const Text('Inicio'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/home',
+                  (route) => false,
+                );
+              },
+            ),
+
+            const Divider(), // Separador visual
             // Opciones del menú
             ListTile(
               leading: const Icon(Icons.school),
               title: const Text('Materias'),
               onTap: () {
+                // Primero cerramos el drawer
                 Navigator.pop(context);
+                // Luego navegamos
                 Navigator.pushNamed(context, '/subjects');
               },
             ),
@@ -57,12 +75,12 @@ class SidebarDrawer extends StatelessWidget {
               },
             ),
 
+            // Calificaciones
             ListTile(
-              leading: const Icon(Icons.grade),
+              leading: const Icon(Icons.grading),
               title: const Text('Calificaciones'),
               onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/grades');
+                Navigator.pushReplacementNamed(context, '/grades');
               },
             ),
 
@@ -142,6 +160,10 @@ class SidebarDrawer extends StatelessWidget {
 
   // Método para ejecutar el logout
   void _performLogout(BuildContext context) {
+    // Primero cerramos el drawer para evitar problemas de contexto
+    Navigator.pop(context);
+
+    // Ahora trabajamos con el contexto de la pantalla principal
     final currentContext = context;
 
     // Mostrar indicador de carga
@@ -158,15 +180,13 @@ class SidebarDrawer extends StatelessWidget {
         // Verificar si el widget sigue montado
         if (currentContext.mounted) {
           // Cerrar diálogo de carga
-          Navigator.pop(currentContext);
+          Navigator.of(currentContext).pop();
 
           if (success) {
-            // Navegar a login
-            Navigator.pushNamedAndRemoveUntil(
+            // Navegar directamente sin usar microtask
+            Navigator.of(
               currentContext,
-              '/login',
-              (route) => false,
-            );
+            ).pushNamedAndRemoveUntil('/login', (route) => false);
           } else {
             ScaffoldMessenger.of(currentContext).showSnackBar(
               const SnackBar(
@@ -179,7 +199,7 @@ class SidebarDrawer extends StatelessWidget {
       },
       onError: (e) {
         if (currentContext.mounted) {
-          Navigator.pop(currentContext); // Cerrar diálogo de carga
+          Navigator.of(currentContext).pop(); // Cerrar diálogo de carga
           ScaffoldMessenger.of(currentContext).showSnackBar(
             SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
           );

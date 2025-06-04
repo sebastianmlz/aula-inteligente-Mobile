@@ -8,7 +8,8 @@ class LoggerUtil {
       lineLength: 120, // Ancho de línea
       colors: true, // Colorear los mensajes
       printEmojis: true, // Mostrar emojis
-      printTime: true, // Mostrar hora
+      dateTimeFormat:
+          DateTimeFormat.onlyTimeAndSinceStart, // Mostrar solo la hora
     ),
     // Nivel mínimo de logs que se mostrarán
     level: Level.debug,

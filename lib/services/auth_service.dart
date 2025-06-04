@@ -64,16 +64,37 @@ class AuthService {
     try {
       _logger.i('Iniciando cierre de sesión');
 
-      // Asegúrate de borrar TODOS los datos almacenados
-      await _storage.deleteAll(); // Si tu biblioteca lo soporta
-      // O borra cada clave individualmente:
+      // Obtener token para depuración
+      final token = await _storage.read(key: 'access_token');
+      _logger.i(
+        'Token antes de eliminar: ${token != null ? "Existe" : "No existe"}',
+      );
+
+      // Intentar primero borrar claves individuales para garantizar que se eliminen
       await _storage.delete(key: 'access_token');
       await _storage.delete(key: 'refresh_token');
       await _storage.delete(key: 'user_data');
       await _storage.delete(key: 'student_id');
 
-      // Registra el éxito para depuración
-      _logger.i("Todos los datos fueron borrados correctamente");
+      // Después intentar deleteAll como respaldo
+      try {
+        await _storage.deleteAll();
+      } catch (e) {
+        _logger.w(
+          'Error en deleteAll, pero las claves individuales fueron borradas: $e',
+        );
+        // No propagamos este error ya que borramos las claves individualmente
+      }
+
+      // Verificar que realmente se haya borrado el token
+      final checkToken = await _storage.read(key: 'access_token');
+      _logger.i(
+        'Token después de eliminar: ${checkToken != null ? "Aún existe" : "Eliminado correctamente"}',
+      );
+
+      if (checkToken != null) {
+        _logger.e('¡Advertencia! El token no fue eliminado correctamente');
+      }
 
       return {'success': true};
     } catch (e) {
